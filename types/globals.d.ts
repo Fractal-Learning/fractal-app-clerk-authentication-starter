@@ -5,5 +5,8 @@ declare global {
     metadata: {
       onboardingComplete?: boolean;
     };
+    public_metadata: {
+      onboardingComplete?: boolean;
+    };
   }
 }
