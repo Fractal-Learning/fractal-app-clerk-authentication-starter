@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import type { Appearance } from '@clerk/types';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import Script from 'next/script';
 import localFont from 'next/font/local';
@@ -53,6 +54,7 @@ export default function RootLayout({
           suppressHydrationWarning
         >
           {children}
+          <SpeedInsights />
         </body>
       </ClerkProvider>
 
