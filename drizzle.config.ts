@@ -6,12 +6,14 @@ import { resolve } from "path";
 config({ path: resolve(process.cwd(), ".env.local") });
 config({ path: resolve(process.cwd(), ".env") });
 
-const databaseUrl = process.env.DATABASE_URL!;
+const databaseUrl = process.env.DATABASE_URL || "";
 
 // Check if it's a local PostgreSQL connection
-const isLocal = databaseUrl.includes("localhost") || 
-                databaseUrl.includes("127.0.0.1") ||
-                (!databaseUrl.includes("neon.tech") && !databaseUrl.includes("vercel") && !databaseUrl.includes("supabase"));
+const isLocal = databaseUrl ? (
+  databaseUrl.includes("localhost") || 
+  databaseUrl.includes("127.0.0.1") ||
+  (!databaseUrl.includes("neon.tech") && !databaseUrl.includes("vercel") && !databaseUrl.includes("supabase"))
+) : false;
 
 // Parse connection string for local connections
 let dbCredentials: { url: string } | { host: string; port: number; user: string; password: string; database: string; ssl: boolean };
