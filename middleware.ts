@@ -21,7 +21,8 @@ export default clerkMiddleware(async (auth, req) => {
   if (
     userId &&
     !sessionClaims?.metadata?.onboardingComplete &&
-    !sessionClaims?.public_metadata?.onboardingComplete
+    !sessionClaims?.public_metadata?.onboardingComplete &&
+    !(sessionClaims as any)?.publicMetadata?.onboardingComplete
   ) {
     console.log(
       'Redirecting to onboarding. Claims:',

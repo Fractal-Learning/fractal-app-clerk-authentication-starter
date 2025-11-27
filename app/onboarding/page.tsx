@@ -1,14 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useSession } from '@clerk/nextjs';
+import { useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { completeOnboarding } from './_actions';
 
 export default function OnboardingPage() {
   const [error, setError] = React.useState('');
+  const [fieldErrors, setFieldErrors] = React.useState<
+    Record<string, string[]>
+  >({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const { user } = useUser();
+
   const { session } = useSession();
   const router = useRouter();
 
@@ -16,31 +19,28 @@ export default function OnboardingPage() {
     event.preventDefault();
     setIsSubmitting(true);
     setError('');
-    console.log('Submitting form...');
+    setFieldErrors({});
 
     try {
       const formData = new FormData(event.currentTarget);
 
-      console.log('Calling server action...');
       const res = await completeOnboarding(formData);
-      console.log('Server action response:', res);
 
       if (res?.error) {
         console.error('Server action error:', res.error);
         setError(res.error);
+        if (res.fieldErrors) {
+          setFieldErrors(res.fieldErrors);
+        }
         setIsSubmitting(false);
       } else {
-        console.log('Server success. Reloading session...');
-
         // Force a session reload to update the token with new claims
         try {
           await session?.reload();
-          console.log('Session reloaded successfully');
         } catch (e) {
           console.warn('Session reload failed', e);
         }
 
-        console.log('Onboarding complete. Refreshing to trigger redirect...');
         // router.refresh() re-fetches server components.
         // The layout will then see the updated session claims and redirect the user.
         router.refresh();
@@ -78,8 +78,13 @@ export default function OnboardingPage() {
               type="text"
               required
               className="block w-full rounded-lg border-none bg-gray-100 px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-[#6c47ff] sm:text-sm sm:leading-6"
-              placeholder="Lincoln High School"
+              placeholder="Lincoln Middle School"
             />
+            {fieldErrors.schoolName && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.schoolName[0]}
+              </p>
+            )}
           </div>
 
           <div>
@@ -114,6 +119,11 @@ export default function OnboardingPage() {
                 </svg>
               </div>
             </div>
+            {fieldErrors.state && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.state[0]}
+              </p>
+            )}
           </div>
 
           <div>
@@ -132,6 +142,11 @@ export default function OnboardingPage() {
               className="block w-full rounded-lg border-none bg-gray-100 px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-[#6c47ff] sm:text-sm sm:leading-6"
               placeholder="5"
             />
+            {fieldErrors.yearsExperience && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.yearsExperience[0]}
+              </p>
+            )}
           </div>
 
           <div>
@@ -176,6 +191,11 @@ export default function OnboardingPage() {
                 </label>
               ))}
             </div>
+            {fieldErrors.grades && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.grades[0]}
+              </p>
+            )}
           </div>
         </div>
 

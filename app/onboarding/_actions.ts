@@ -10,8 +10,14 @@ import { z } from 'zod';
 const onboardingSchema = z.object({
   schoolName: z.string().min(1, 'School name is required.'),
   state: z.string().min(1, 'State is required.'),
-  grades: z.array(z.string()).default([]),
-  yearsExperience: z.coerce.number().int().min(0).default(0),
+  grades: z.array(z.string()).min(1, 'Please select at least one grade.'),
+  yearsExperience: z
+    .string()
+    .min(1, 'Years of experience is required.')
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val >= 0, {
+      message: 'Years of experience must be a non-negative number.',
+    }),
 });
 
 export const completeOnboarding = async (formData: FormData) => {
@@ -47,11 +53,12 @@ export const completeOnboarding = async (formData: FormData) => {
     });
 
     if (!parsedData.success) {
-      console.error(
-        '[Onboarding] Invalid form data:',
-        parsedData.error.flatten()
-      );
-      return { error: 'Invalid form data provided.' };
+      const fieldErrors = parsedData.error.flatten().fieldErrors;
+      console.error('[Onboarding] Invalid form data:', fieldErrors);
+      return { 
+        error: 'Please fill out all required fields.',
+        fieldErrors 
+      };
     }
 
     const { schoolName, state, grades, yearsExperience } = parsedData.data;
