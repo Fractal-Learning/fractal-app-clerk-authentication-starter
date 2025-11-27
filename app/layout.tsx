@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import type { Appearance } from '@clerk/types';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import Script from 'next/script';
 import localFont from 'next/font/local';
@@ -22,15 +23,15 @@ const geistMono = localFont({
  */
 const clerkAppearanceObject = {
   cssLayerName: 'clerk',
-  variables: { colorPrimary: '#000000' },
+  variables: { colorPrimary: '#6c47ff' },
   elements: {
     socialButtonsBlockButton:
-      'bg-white border-gray-200 hover:bg-transparent hover:border-black text-gray-600 hover:text-black',
+      'bg-white border-gray-200 hover:bg-transparent hover:border-[#6c47ff] text-gray-600 hover:text-[#6c47ff]',
     socialButtonsBlockButtonText: 'font-semibold',
     formButtonReset:
-      'bg-white border border-solid border-gray-200 hover:bg-transparent hover:border-black text-gray-500 hover:text-black',
+      'bg-white border border-solid border-gray-200 hover:bg-transparent hover:border-[#6c47ff] text-gray-500 hover:text-[#6c47ff]',
     membersPageInviteButton:
-      'bg-black border border-black border-solid hover:bg-white hover:text-black',
+      'bg-[#6c47ff] border border-[#6c47ff] border-solid hover:bg-white hover:text-[#6c47ff]',
     card: 'bg-[#fafafa]',
   },
 } satisfies Appearance;
@@ -53,6 +54,7 @@ export default function RootLayout({
           suppressHydrationWarning
         >
           {children}
+          <SpeedInsights />
         </body>
       </ClerkProvider>
 
