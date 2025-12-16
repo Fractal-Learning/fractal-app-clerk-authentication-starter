@@ -42,7 +42,7 @@ export async function verifyPassword(formData: FormData) {
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: error.errors[0]?.message || 'Invalid input',
+        error: error.issues[0]?.message || 'Invalid input',
       };
     }
     return { success: false, error: 'An error occurred' };
