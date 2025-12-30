@@ -19,6 +19,7 @@ type Props = {
    * Optional test/DI hook: provide states to skip fetching.
    */
   states?: UsState[];
+  onSelect?: (state: UsState | null) => void;
 };
 
 export function StateCombobox({
@@ -26,6 +27,7 @@ export function StateCombobox({
   inputId,
   placeholder = 'Start typing a state…',
   states,
+  onSelect,
 }: Props) {
   const [allStates, setAllStates] = React.useState<UsState[]>(states ?? []);
   const [isLoading, setIsLoading] = React.useState(states ? false : true);
@@ -71,11 +73,15 @@ export function StateCombobox({
     return filterUsStates(allStates, query).slice(0, 12);
   }, [allStates, query]);
 
-  const selectState = React.useCallback((s: UsState) => {
+  const selectState = React.useCallback(
+    (s: UsState) => {
     setSelectedCode(s.code);
     setQuery(s.name);
     setIsOpen(false);
-  }, []);
+      onSelect?.(s);
+    },
+    [onSelect]
+  );
 
   return (
     <div className="relative">
@@ -101,6 +107,7 @@ export function StateCombobox({
           setQuery(e.target.value);
           // Force a re-selection if user changes the text after picking
           setSelectedCode('');
+          onSelect?.(null);
           setIsOpen(true);
         }}
         onKeyDown={(e) => {

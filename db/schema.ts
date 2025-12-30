@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core';
 
 export const orgTypeEnum = pgEnum('org_type', [
@@ -77,6 +78,55 @@ export const usStates = pgTable(
   }
 );
 
+// NCES CCD Directory caches (Urban Institute API)
+export const ncesDistrictCache = pgTable(
+  'nces_district_cache',
+  {
+    leaid: text('leaid').primaryKey(),
+    leaName: text('lea_name').notNull(),
+    fips: integer('fips').notNull(),
+
+    dataOrigin: text('data_origin')
+      .notNull()
+      .default('urban_educationdata_ccd_api'),
+    dataset: text('dataset').notNull().default('ccd'),
+    datasetYear: integer('dataset_year').notNull(),
+
+    sourceRowHash: text('source_row_hash'),
+    raw: jsonb('raw').notNull(),
+    fetchedAt: timestamp('fetched_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    fipsYearIdx: index('nces_district_fips_year_idx').on(t.fips, t.datasetYear),
+  })
+);
+
+export const ncesSchoolCache = pgTable(
+  'nces_school_cache',
+  {
+    ncessch: text('ncessch').primaryKey(),
+    schoolName: text('school_name').notNull(),
+    leaid: text('leaid').notNull(),
+
+    dataOrigin: text('data_origin')
+      .notNull()
+      .default('urban_educationdata_ccd_api'),
+    dataset: text('dataset').notNull().default('ccd'),
+    datasetYear: integer('dataset_year').notNull(),
+
+    sourceRowHash: text('source_row_hash'),
+    raw: jsonb('raw').notNull(),
+    fetchedAt: timestamp('fetched_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    leaidYearIdx: index('nces_school_leaid_year_idx').on(t.leaid, t.datasetYear),
+  })
+);
+
 // Organizations - Hierarchy
 export const organizations = pgTable('organizations', {
   id: text('id').primaryKey(), // Clerk Org ID
@@ -104,6 +154,12 @@ export type SelectTeacherProfile = typeof teacherProfiles.$inferSelect;
 
 export type InsertUsState = typeof usStates.$inferInsert;
 export type SelectUsState = typeof usStates.$inferSelect;
+
+export type InsertNcesDistrictCache = typeof ncesDistrictCache.$inferInsert;
+export type SelectNcesDistrictCache = typeof ncesDistrictCache.$inferSelect;
+
+export type InsertNcesSchoolCache = typeof ncesSchoolCache.$inferInsert;
+export type SelectNcesSchoolCache = typeof ncesSchoolCache.$inferSelect;
 
 export type InsertOrganization = typeof organizations.$inferInsert;
 export type SelectOrganization = typeof organizations.$inferSelect;
