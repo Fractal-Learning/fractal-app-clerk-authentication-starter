@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { completeOnboarding } from './_actions';
+import { StateCombobox } from './state-combobox';
 
 export default function OnboardingPage() {
   const [error, setError] = React.useState('');
@@ -23,6 +24,14 @@ export default function OnboardingPage() {
 
     try {
       const formData = new FormData(event.currentTarget);
+      // Hidden inputs don't participate in native "required" validation.
+      // Ensure the user actually selected a state from the dropdown.
+      const selectedState = formData.get('state');
+      if (!selectedState) {
+        setFieldErrors({ state: ['State is required.'] });
+        setIsSubmitting(false);
+        return;
+      }
 
       const res = await completeOnboarding(formData);
 
@@ -94,31 +103,7 @@ export default function OnboardingPage() {
             >
               State
             </label>
-            <div className="relative">
-              <select
-                id="state"
-                name="state"
-                required
-                className="block w-full rounded-lg border-none bg-gray-100 px-4 py-3 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-[#6c47ff] sm:text-sm sm:leading-6 appearance-none"
-              >
-                <option value="">Select a State</option>
-                <option value="CA">California</option>
-                <option value="TX">Texas</option>
-                <option value="NY">New York</option>
-                <option value="FL">Florida</option>
-                <option value="IL">Illinois</option>
-                {/* Add more states as needed */}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
-                <svg
-                  className="fill-current h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
+            <StateCombobox name="state" inputId="state" />
             {fieldErrors.state && (
               <p className="mt-1 text-sm text-red-600">
                 {fieldErrors.state[0]}

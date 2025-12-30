@@ -62,6 +62,21 @@ export const teacherProfiles = pgTable('teacher_profiles', {
     .notNull(),
 });
 
+// US States - lookup table
+export const usStates = pgTable(
+  'us_states',
+  {
+    // ISO 3166-2:US / USPS code (e.g. "CA")
+    code: text('code').primaryKey(),
+    name: text('name').notNull(),
+  },
+  (table) => {
+    return {
+      nameIdx: uniqueIndex('us_states_name_unique').on(table.name),
+    };
+  }
+);
+
 // Organizations - Hierarchy
 export const organizations = pgTable('organizations', {
   id: text('id').primaryKey(), // Clerk Org ID
@@ -86,6 +101,9 @@ export type SelectUserPii = typeof usersPii.$inferSelect;
 
 export type InsertTeacherProfile = typeof teacherProfiles.$inferInsert;
 export type SelectTeacherProfile = typeof teacherProfiles.$inferSelect;
+
+export type InsertUsState = typeof usStates.$inferInsert;
+export type SelectUsState = typeof usStates.$inferSelect;
 
 export type InsertOrganization = typeof organizations.$inferInsert;
 export type SelectOrganization = typeof organizations.$inferSelect;
