@@ -1,0 +1,64 @@
+---
+description: Security rules for auth, validation, secrets, and safe Next.js patterns.
+globs:
+  - "app/**/*.{ts,tsx}"
+  - "lib/**/*.{ts,tsx}"
+  - "middleware.ts"
+  - "next.config.{js,ts}"
+alwaysApply: true
+---
+
+## Security (Next.js + Clerk + Drizzle)
+
+### Authentication & authorization
+- **Server-side verification is mandatory** for all sensitive operations:
+  - **Server Actions** and **Route Handlers** must verify auth state using Clerk server helpers (`auth()` / `currentUser()`), *before* reading/writing data.
+  - Prefer **deny-by-default**: if there is no `userId`, throw/return `Unauthorized`.
+
+```ts
+import { auth } from "@clerk/nextjs/server";
+
+export async function myAction() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  // ... proceed
+}
+```
+
+- **Middleware protection**:
+  - Keep `middleware.ts` configured to protect private routes and allow public access only to explicitly enumerated public paths (e.g. `/`, `/sign-in`, `/sign-up`, webhooks).
+  - Avoid leaking sensitive data via middleware logs.
+- **Role/org checks**:
+  - If the feature is org- or role-scoped, validate organization membership / role immediately after auth.
+
+### Data validation & input handling
+- **Validate all user-controlled input with Zod**:
+  - Route handler bodies, query params, headers you depend on, and Server Action arguments.
+  - Never trust `req.json()` output or client arguments directly.
+- **Prefer explicit schemas** per endpoint/action: keep schemas close to handlers or in a `schema.ts` next to them.
+- **Avoid rendering user-generated HTML**:
+  - Don’t use `dangerouslySetInnerHTML`.
+  - If you must render HTML, sanitize with a well-maintained library (e.g. DOMPurify) and document why it’s safe.
+
+### Database security (Drizzle)
+- **Use Drizzle query builder** (`db.select()`, `db.insert()`, etc.) for parameterization.
+- **Avoid raw SQL with interpolated variables**.
+  - If `sql` tagged templates are necessary, pass values as parameters, never string-concatenate.
+
+### Secrets & environment variables
+- **No hardcoded secrets**: never commit keys/tokens/secrets.
+- **Prefer `lib/env.ts`** for env access (typed validation). Do not add new `process.env.*` reads elsewhere without a strong reason.
+- **Client vs server**:
+  - Secrets must never be exposed via `NEXT_PUBLIC_*`.
+  - Server-only secrets must be read only in server contexts (route handlers, server actions, server utilities).
+
+### Webhooks
+- **Verify webhook signatures** before processing and writing to the DB.
+- **Fail closed**: if signature validation fails, return a non-2xx response.
+- **Minimize data retention**: store only what you need from webhook payloads; avoid storing raw payloads unless required.
+
+### Dependency & runtime hardening
+- **Prefer reputable, maintained packages**; avoid adding dependencies for trivial utilities.
+- **Avoid leaking stack traces** in production error responses.
+- **Security headers**: keep `next.config.*` headers reasonable (e.g. `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, etc.) when applicable for the deployment environment.
+

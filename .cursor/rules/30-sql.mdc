@@ -1,0 +1,37 @@
+---
+description: SQL/DB rules: Drizzle schema, migrations, and safe query patterns.
+globs:
+  - "db/**/*.{ts,tsx}"
+  - "drizzle/**/*"
+  - "**/*.sql"
+  - "drizzle.config.{ts,js}"
+  - "lib/db.ts"
+alwaysApply: true
+---
+
+## SQL / Database (Drizzle + Postgres)
+
+### Schema & migrations
+- **Schema source of truth**: the TypeScript schema in `db/schema.ts`.
+- **Migrations**:
+  - Prefer generating migrations via `pnpm db:generate` and applying via `pnpm db:migrate`.
+  - Keep migrations small and reversible when feasible.
+  - Never hand-edit the Drizzle meta journal unless you know exactly why.
+
+### Data modeling
+- **PII separation**: keep personally identifiable information isolated when possible (this repo already separates core identity from PII).
+- **Explicit constraints**:
+  - Use `notNull`, `unique`, and foreign key constraints where appropriate.
+  - Add indexes for high-cardinality lookup columns (email, foreign keys, etc.).
+- **Timestamps**: prefer `created_at` / `updated_at` with timezone and server defaults.
+
+### Query safety & performance
+- **Prefer Drizzle query builder** over raw SQL.
+- **No string-concatenated SQL**. If using `sql` templates, parameterize all values.
+- **Avoid N+1** patterns: fetch in batches where possible.
+- **Use transactions** for multi-step writes that must be atomic.
+
+### Local vs remote DB
+- Use the existing `lib/db.ts` `getDb()` abstraction; don’t create ad-hoc DB clients.
+- Do not embed connection strings or credentials in code or docs; use env + `lib/env.ts`.
+

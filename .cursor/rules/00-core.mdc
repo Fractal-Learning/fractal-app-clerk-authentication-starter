@@ -1,0 +1,40 @@
+---
+description: Core engineering principles, repo conventions, and TypeScript/React style.
+globs:
+  - "**/*.{ts,tsx,js,jsx,md,mdx,json,yml,yaml}"
+alwaysApply: true
+---
+
+## Core rules (apply everywhere)
+
+### Principles
+- **Prefer clarity over cleverness**: optimize for readability and maintainability.
+- **Keep changes small and cohesive**: each change should have a single purpose.
+- **Make invalid states unrepresentable**: lean on TypeScript + Zod.
+- **Be explicit about client vs server**: don’t accidentally move secrets to the client.
+
+### Repo / Next.js conventions (App Router)
+- **App Router only**: pages/routes live under `app/` using `layout.tsx` / `page.tsx` / `route.ts`.
+- **Keep server-only logic server-side**:
+  - Put database + secret-dependent logic in server files (`app/api/**`, Server Actions, `lib/**` server helpers).
+  - Client Components (`"use client"`) must never import server-only modules (`lib/db`, `lib/env`, `@clerk/nextjs/server`).
+- **Prefer colocated “feature” code** under `app/<feature>/...` when it improves discoverability.
+- **Imports**:
+  - Prefer the path alias `@/*` (configured in `tsconfig.json`) over deep relative paths.
+  - Keep import ordering consistent: external → internal → relative.
+
+### TypeScript style
+- **Strict TypeScript**: avoid `any`. If unavoidable, justify with a short comment and narrow it as soon as possible.
+- **Prefer `unknown` + refinement** over `any`.
+- **Prefer explicit return types** for exported functions and server actions/handlers.
+- **Prefer `const`** and immutable data; avoid reassigning variables unless necessary.
+
+### React / UI style
+- **Default to Server Components**; use `"use client"` only when needed (state, effects, browser APIs).
+- **Keep components small**: extract reusable UI into `app/components/` and feature components near their usage.
+- **Avoid `dangerouslySetInnerHTML`** (see security rules for exceptions).
+
+### Package manager & scripts
+- **Use `pnpm`** (repo declares `pnpm@10.x`).
+- **Prefer existing scripts** in `package.json` (e.g. `pnpm lint`, `pnpm db:migrate`) rather than ad-hoc commands.
+
