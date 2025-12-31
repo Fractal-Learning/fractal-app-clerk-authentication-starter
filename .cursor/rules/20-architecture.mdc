@@ -1,0 +1,49 @@
+---
+description: Architectural boundaries and patterns for Next.js App Router, server actions, and data access.
+globs:
+  - "app/**/*.{ts,tsx}"
+  - "lib/**/*.{ts,tsx}"
+  - "db/**/*.{ts,tsx}"
+  - "middleware.ts"
+alwaysApply: true
+---
+
+## Architecture (how this repo is meant to be built)
+
+### Layering & boundaries
+- **UI (React components)**:
+  - Server Components by default.
+  - Client Components only when needed; they must not import server-only modules.
+- **Server boundary**:
+  - Database access goes through `lib/db.ts` (`getDb()`).
+  - Environment variables are accessed via `lib/env.ts` (`getEnv()`).
+  - Authentication on the server uses `@clerk/nextjs/server`.
+- **API boundary**:
+  - Route Handlers live in `app/api/**/route.ts`.
+  - They should validate input, authenticate, then call domain/data functions.
+- **Server Actions**:
+  - Keep Server Actions small: validate → authorize → call domain logic → return minimal result.
+  - Do not return secrets or large payloads to the client.
+
+### Module placement guidelines
+- **`lib/`**:
+  - Shared infrastructure (DB, env, integrations).
+  - Avoid putting UI code here.
+- **`db/`**:
+  - Drizzle schema and DB-related types.
+  - Keep schema changes consistent with migrations.
+- **`app/components/`**:
+  - Reusable UI components.
+- **`app/<feature>/`**:
+  - Feature routes, page/layout, feature-specific components/actions.
+
+### Server/client correctness
+- **Never import server-only code into client files**:
+  - If a file starts with `"use client"`, it must not import `lib/db`, `lib/env`, or `@clerk/nextjs/server`.
+  - Prefer passing data down from a Server Component to a Client Component via props.
+
+### Error handling & logging
+- **Avoid logging secrets** (tokens, cookies, auth claims, webhook payloads).
+- **Prefer structured, minimal logs**. Remove debug logs before merging if they may expose sensitive context.
+- **Return user-safe errors**; keep internal detail on the server only.
+

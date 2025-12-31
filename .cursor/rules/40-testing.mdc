@@ -1,0 +1,53 @@
+---
+description: Testing strategy and patterns (Vitest/Vite for unit tests, Playwright for E2E).
+globs:
+  - "app/**/*.{ts,tsx}"
+  - "lib/**/*.{ts,tsx}"
+  - "**/*.{test,spec}.{ts,tsx}"
+  - "tests/**/*"
+  - "playwright.config.{ts,js}"
+  - "vitest.config.{ts,js}"
+alwaysApply: true
+---
+
+## Testing (strategy + patterns)
+
+### What to test
+- **Unit tests (Vitest/Vite)**:
+  - Pure functions and domain logic (validation, mappers, helpers).
+  - DB-adjacent logic by mocking the DB client or extracting query builders.
+- **Integration tests**:
+  - Route Handlers / Server Actions with realistic inputs and mocked external services.
+  - Validate auth/authorization and Zod validation behavior.
+- **E2E tests (Playwright)**:
+  - Critical user flows: sign-in/up, onboarding, protected routes, dashboard, and key org flows.
+
+### General rules
+- **Deterministic tests**: avoid relying on current time, randomness, or network unless explicitly controlled.
+- **No production services in tests**: don’t hit real Clerk/Neon in CI; use mocks or a test environment.
+- **Arrange / Act / Assert**: keep tests readable and focused.
+
+### Vitest (Vite-powered unit tests)
+- Prefer:
+  - `describe/it` blocks with clear names.
+  - Table-driven tests (`it.each`) for validation edge cases.
+  - Lightweight fixtures and factories for inputs.
+- **Mocking guidance**:
+  - For auth: mock `@clerk/nextjs/server` (`auth()` / `currentUser()`).
+  - For DB: mock `getDb()` from `lib/db.ts` or inject a DB dependency.
+- **Validation**:
+  - Assert Zod schema errors are thrown/returned for invalid inputs.
+
+### Playwright (automation)
+- Test from the user’s perspective:
+  - Navigation, redirects, protected route behavior, and essential UI content.
+- Prefer stable selectors:
+  - Use `getByRole`, `getByLabel`, and `data-testid` only when necessary.
+- Avoid test flakiness:
+  - Don’t use arbitrary timeouts; wait for explicit UI states.
+
+### Suggested repo conventions (when tests are added)
+- **Unit/integration**: **source-adjacent** `*.test.ts(x)` (next to code in `app/` or `lib/`) or `tests/unit/**`.
+- **E2E**: `tests/e2e/**` with Playwright config at repo root.
+- Add scripts such as `pnpm test` (vitest) and `pnpm test:e2e` (playwright) when setting up CI.
+
